@@ -3,6 +3,8 @@
 "use strict";
 
 var canvas = document.getElementById('playfield');
+// create context for background 
+var textCtx = canvas.getContext('2d');
 
 var playfieldWidth = 430;
 var playfieldHeight = 230;
@@ -15,15 +17,10 @@ var lastMapCurrentPixelLoc = {x:0, y:0};
 var mapPixelMultiplier = 6;
 var mapPixelOffset = mapPixelMultiplier/2;
 var blinkPixel = false;
-
 var roomStartLoc = {x:40, y:25};
-
 var dungeonSize = {width:25, height:25};
-
 var currentRoomPos, messages;
-
 var emptyRoomList = [];
-
 var player = {};
 var lastMove = {};
 
@@ -150,21 +147,14 @@ function makeRandomBeggarProperties(beggar) {
 }
 
 function makeRandomWallStrProperty() {
-
-    var wallChance = Math.floor(Math.random()*3);
-    
-    var wallStr;
-        
-    if(wallChance === 0){
-        wallStr = "w"; // wall
-    }else if(wallChance === 1){
-        wallStr = "o"; // open doorway
-    }else{
-        wallStr = "l"; // locked
+    var wallChance = _randInt(0,3);
+    if (wallChance === 0) {
+        return "w"; // wall
+    } else if(wallChance === 1) {
+        return "o"; // open doorway
+    } else {
+        return "l"; // locked
     }
-    
-    return wallStr;
-
 }
 
 function makeRooms(rows, cols){
@@ -182,21 +172,7 @@ function makeRooms(rows, cols){
 
       for(var j=0; j < cols; j++){
         // Initializes:
-
         var room = {};
-        
-//      room.colR1 = Math.floor(Math.random()*206)+50;
-//      room.colR2 = Math.floor(Math.random()*206)+50;
-//      room.colR3 = Math.floor(Math.random()*206)+50;
-//      
-//      room.colG1 = Math.floor(Math.random()*206)+50;
-//      room.colG2 = Math.floor(Math.random()*206)+50;
-//      room.colG3 = Math.floor(Math.random()*206)+50;
-//      
-//      room.colB1 = Math.floor(Math.random()*206)+50;
-//      room.colB2 = Math.floor(Math.random()*206)+50;
-//      room.colB3 = Math.floor(Math.random()*206)+50;
-
         room.colR1 = Math.floor(206/(dungeonSize.width/j))+50;
         room.colG1 = Math.floor(206/(dungeonSize.width/i))+50;
         room.colB1 = Math.floor(206/(dungeonSize.width/i))+50;
@@ -208,47 +184,28 @@ function makeRooms(rows, cols){
         room.colR3 = Math.floor(250 - (206/(dungeonSize.width/j)));
         room.colG3 = Math.floor(250 - (206/(dungeonSize.width/i)));
         room.colB3 = Math.floor(250 - (206/(dungeonSize.width/i)));
-
                 
         if(i === currentRoomPos.x && j === currentRoomPos.y){
-        
             room.exitRight = "o";
-    
             room.exitDown = "o";
-        
         }else if(i === currentRoomPos.x -1 && j === currentRoomPos.y){
-        
             room.exitRight = "o";
-    
             room.exitDown = makeRandomWallStrProperty();
-        
         }else if(i === currentRoomPos.x && j === currentRoomPos.y -1){
-        
             room.exitRight = makeRandomWallStrProperty();
-    
             room.exitDown = "o";
-        
         }else{
-
             room.exitRight = makeRandomWallStrProperty();
-    
             room.exitDown = makeRandomWallStrProperty();
-        
         }
         
         if(i === dungeonSize.width-1){
-                        
             room.exitRight = "w";
-        
         }
         
         if(j === dungeonSize.height-1){
-        
             room.exitDown = "w";
-        
         }
-        
-        
         
         room.chest = {};
         room.keys = null;
@@ -258,44 +215,22 @@ function makeRooms(rows, cols){
         room.visited = false;
         
         if(i !== currentRoomPos.x && j !== currentRoomPos.y){
-
             var centerRoomProp = Math.floor(Math.random()*7);
-            
             if(centerRoomProp === 1){
-            
                 room.keys = Math.floor(Math.random()*3) + 1;
-                    
-            }
-            else if(centerRoomProp === 2){
-            
+            } else if(centerRoomProp === 2){
                 room.gold = Math.floor(Math.random()*5) + 1;
-            
-            }else if(centerRoomProp === 3){
-            
+            } else if(centerRoomProp === 3){
                 room.food = Math.floor(Math.random()*6) + 1;
-            
-            }else if(centerRoomProp === 4){
-            
-                //if(Math.floor(Math.random()*2) == 0){
-                
-                    makeRandomBeggarProperties(room.beggar);
-                
-                //}
-            
-            }else if(centerRoomProp === 5){
-            
+            } else if(centerRoomProp === 4){
+                makeRandomBeggarProperties(room.beggar);
+            } else if(centerRoomProp === 5){
                 makeRandomChestProperties(room.chest);
-            
             }
-
         }else if(i === currentRoomPos.x && j === currentRoomPos.y){
-                
             room.visited = true;
-        
         }else{
-        
             emptyRoomList.push({x:i, y:j});
-        
         }
     
         arr[i][j] = room;
@@ -307,91 +242,47 @@ function makeRooms(rows, cols){
 
 var rooms = makeRooms(dungeonSize.width,dungeonSize.height);
 
-
 CanvasRenderingContext2D.prototype.wrapText = function (text, x, y, lineHeight) {
-
     var lines = text.split("\n");
-
     for (var i = 0; i < lines.length; i++) {
-
         if(i > 0){
-        
             lines[i] = lines[i].substring(1);
-        
         }
-
         this.fillText(lines[i], x, y);
         y += lineHeight;
-
     }
 };
 
-function returnWallStringForProperty(propertyStr,dirStr){
-
+function returnWallStringForProperty(propertyStr, dirStr){
     if(propertyStr === "w"){
-        
         if(dirStr === "hor"){
-    
             return "|";
-            
         }else{
-        
             return "-";
-        
         } 
-    
     }else if(propertyStr === "o"){
-    
         return " ";
-    
     }else{
-    
         return "+";
-    
     }
-
 }
 
-
-
-var aniCurrentMapPixelLocVar=setInterval(function(){aniCurrentMapPixelLoc();},500);
-
-function aniCurrentMapPixelLoc(){
-
-    if(blinkPixel){
-        mapCtx.fillStyle = "rgba(0,255,242,255)";
-    }else{
-        mapCtx.fillStyle = "rgba(255,255,255,255)";
-    }
-    
+var aniCurrentMapPixelLocVar = setInterval(function() {
+    mapCtx.fillStyle = blinkPixel ? "rgba(0,255,242,255)" : "rgba(255,255,255,255)";
     blinkPixel = !blinkPixel;
     
     mapCtx.fillRect(lastMapCurrentPixelLoc.x, lastMapCurrentPixelLoc.y, mapPixelOffset, mapPixelOffset);
-}
-
-// create context for background 
-var textCtx = canvas.getContext('2d');
-
-
+}, 500);
 
 function drawBG(writeMessages){
-
     lastMapCurrentPixelLoc.x = mapStartLoc.x+(currentRoomPos.x*mapPixelMultiplier);
     lastMapCurrentPixelLoc.y = mapStartLoc.y+(currentRoomPos.y*mapPixelMultiplier);
     
-    var l;
-    var r;
-    var u;
-    var d;
-    
-    var c;
-    
+    var l, r, u, d, c, chestMsg;
     var roomProperties = rooms[currentRoomPos.x][currentRoomPos.y];
     
     textCtx.fillStyle = "#A1A1A1";
     textCtx.font = "bold 18px Courier New";
-    
-    
     
     // Create gradient
     var gradient=textCtx.createLinearGradient(roomStartLoc.x,roomStartLoc.y,roomStartLoc.x+100,0);
@@ -399,207 +290,118 @@ function drawBG(writeMessages){
     gradient.addColorStop("0.5",rgbToHex(roomProperties.colR2,roomProperties.colG2,roomProperties.colB2));
     gradient.addColorStop("1.0",rgbToHex(roomProperties.colR3,roomProperties.colG3,roomProperties.colB3));
     
-    
     // check if room was visited for points
-        
     if(roomProperties.visited === false){
-    
         roomProperties.visited = true;
-        
         player.roomsVisited += 1;
-    
     }
     
     var isChestObjEmpty = isEmpty(roomProperties.chest);
-    
     var isBeggarObjEmpty = isEmpty(roomProperties.beggar);
     
-    if(isChestObjEmpty === false){
-    
-        if(roomProperties.chest.opened === false){
-        
+    if (isChestObjEmpty === false) {
+        if (roomProperties.chest.opened === false) {
             c = "C";
-            
             if(player.keys > 0){
-            
-                writeMessage("There is a chest in this room. It costs one key to open. Press J if you wish to open it.","messageReg");
-            
+                chestMsg = "Press J if you wish to open it.";
             }else{
-            
-                writeMessage("There is a chest in this room. It costs one key to open. Unfortunately, you have no keys left.","messageReg");
-                
+                chestMsg = "Unfortunately, you have no keys left.";
             }
-        
-        }else{
-        
+            writeMessage("There is a chest in this room. It costs one key to open. "+chestMsg, "messageReg");
+        } else {
             c = "_";
-            
-            if(writeMessages){
-            
-                writeMessage("An empty chest lay before you.","messageReg");
-            
+            if (writeMessages) {
+                writeMessage("An empty chest lies before you.","messageReg");
             }
-        
         }
-    
-    }
-    
-    else if(isBeggarObjEmpty === false){
-    
+    } else if (isBeggarObjEmpty === false) {
         c = "I";
-        
         var forGoldStr = "";
         var forFoodStr = "";
         var forKeysStr = "";
         
         if(roomProperties.beggar.forGold > 0){
-        
             forGoldStr ="Gold:"+roomProperties.beggar.forGold+" ";
-            
         }
         
         if(roomProperties.beggar.forFood > 0){
-        
             forFoodStr ="Food:"+roomProperties.beggar.forFood+" ";
-            
         }
         
         if(roomProperties.beggar.forKeys > 0){
-        
             forKeysStr ="Keys:"+roomProperties.beggar.forKeys+" ";
-            
         }
         
         if(roomProperties.beggar.wantsGold > 0){
-        
             writeMessage("Please.. give me "+roomProperties.beggar.wantsGold+" gold, and I will give you: "+forFoodStr+forKeysStr,"messageGreen");
-        
         }else if(roomProperties.beggar.wantsFood > 0){
-        
             writeMessage("Please.. give me "+roomProperties.beggar.wantsFood+" food, and I will give you: "+forGoldStr+forKeysStr,"messageGreen");
-        
         }else{
-        
             writeMessage("Please.. give me "+roomProperties.beggar.wantsKeys+" keys, and I will give you: "+forGoldStr+forFoodStr,"messageGreen");
-        
         }
-        
-    
-    }
-    else if (roomProperties.keys !== null) {
-    
+    } else if (roomProperties.keys !== null) {
         c = "K";
-        
         writeMessage("You see something shiny on the floor. A key! Is there more than one? Press J to find out.","messageReg");
-    
-    }else if (roomProperties.food !== null) {
-    
+    } else if (roomProperties.food !== null) {
         c = "F";
-        
         writeMessage("You see a can of food on the floor. You could always use more of that. Press J to pick it up.","messageReg");
-    
-    }else if (roomProperties.gold !== null) {
-    
+    } else if (roomProperties.gold !== null) {
         c = "G";
-        
         writeMessage("You see gold, but is it of any use? Press J to pick it up.","messageReg");
-    
-    }else{
-    
+    } else {
         c = " ";
-
-        
         if(writeMessages){
-    
             writeMessage("Empty room.","messageReg");
-        
         }
-    
     }
         
     var leftRoomProperties;
-    
     if(currentRoomPos.x > 0){
-    
         leftRoomProperties = rooms[currentRoomPos.x-1][currentRoomPos.y];
-        
         l = returnWallStringForProperty(leftRoomProperties.exitRight, "hor");
-        
         if(l === " "){
-        
             mapCtx.fillStyle = "rgba(130,130,130,255)";
             mapCtx.fillRect((mapStartLoc.x+(currentRoomPos.x*mapPixelMultiplier)-mapPixelOffset), mapStartLoc.y+(currentRoomPos.y*mapPixelMultiplier), mapPixelOffset, mapPixelOffset);
-        
-        }else if(l === "+"){
-        
+        } else if (l === "+") {
             mapCtx.fillStyle = "rgba(255,0,255,255)";
             mapCtx.fillRect((mapStartLoc.x+(currentRoomPos.x*mapPixelMultiplier)-mapPixelOffset), mapStartLoc.y+(currentRoomPos.y*mapPixelMultiplier), mapPixelOffset, mapPixelOffset);
-        
         }
-    
-    }else{
-    
+    } else {
         l = "|";
-    
     }
     
     var upRoomProperties;
-    
     if(currentRoomPos.y > 0){
-    
         upRoomProperties = rooms[currentRoomPos.x][currentRoomPos.y-1];
-        
         u = returnWallStringForProperty(upRoomProperties.exitDown, "ver");
-        
         if(u === " "){
-        
             mapCtx.fillStyle = "rgba(130,130,130,255)";
             mapCtx.fillRect(mapStartLoc.x+(currentRoomPos.x*mapPixelMultiplier), (mapStartLoc.y+(currentRoomPos.y*mapPixelMultiplier)-mapPixelOffset), mapPixelOffset, mapPixelOffset);
-        
         }else if(u === "+"){
-        
             mapCtx.fillStyle = "rgba(255,0,255,255)";
             mapCtx.fillRect(mapStartLoc.x+(currentRoomPos.x*mapPixelMultiplier), (mapStartLoc.y+(currentRoomPos.y*mapPixelMultiplier)-mapPixelOffset), mapPixelOffset, mapPixelOffset);
-        
         }
-    
     }else{
-    
         u = "-";
-    
     }
     
-    
-    
     r = returnWallStringForProperty(roomProperties.exitRight, "hor");
-    
     if(r === " "){
-    
         mapCtx.fillStyle = "rgba(130,130,130,255)";
         mapCtx.fillRect((mapStartLoc.x+(currentRoomPos.x*mapPixelMultiplier)+mapPixelOffset), mapStartLoc.y+(currentRoomPos.y*mapPixelMultiplier), mapPixelOffset, mapPixelOffset);
-    
     }else if(r === "+"){
-    
         mapCtx.fillStyle = "rgba(255,0,255,255)";
         mapCtx.fillRect((mapStartLoc.x+(currentRoomPos.x*mapPixelMultiplier)+mapPixelOffset), mapStartLoc.y+(currentRoomPos.y*mapPixelMultiplier), mapPixelOffset, mapPixelOffset);
-    
     }
     
     d = returnWallStringForProperty(roomProperties.exitDown, "ver");
-    
     if(d === " "){
-        
         mapCtx.fillStyle = "rgba(130,130,130,255)";
         mapCtx.fillRect(mapStartLoc.x+(currentRoomPos.x*mapPixelMultiplier), (mapStartLoc.y+(currentRoomPos.y*mapPixelMultiplier)+mapPixelOffset), mapPixelOffset, mapPixelOffset);
-        
     }else if(d === "+"){
-    
         mapCtx.fillStyle = "rgba(255,0,255,255)";
         mapCtx.fillRect(mapStartLoc.x+(currentRoomPos.x*mapPixelMultiplier), (mapStartLoc.y+(currentRoomPos.y*mapPixelMultiplier)+mapPixelOffset), mapPixelOffset, mapPixelOffset);
-    
     }
-    
-    
     
     var roomStr = 
    "+------"+u+"------+\n "+
@@ -617,110 +419,62 @@ function drawBG(writeMessages){
     
     // Fill with gradient
     textCtx.fillStyle=gradient;
-        
     textCtx.wrapText(roomStr,roomStartLoc.x,roomStartLoc.y,16);
     
-    
-    
-    
     var diff;
-    
     textCtx.fillStyle='#DEDEDE';
-    
     textCtx.wrapText("("+currentRoomPos.x+","+currentRoomPos.y+")",0,210,16);
-    
     textCtx.wrapText(player.health+"/"+player.maxHealth,80,210,16);
-    
     diff = player.health - lastMove.health;
-    
     if(diff < 0){
-    
         textCtx.fillStyle='#EB1313';
         textCtx.wrapText(""+diff+"",80,230,16);
-
     }else if(diff > 0){
-    
         textCtx.fillStyle='#05ED14';
         textCtx.wrapText("+"+diff,80,230,16);
-    
     }
     
-    
-    
     textCtx.fillStyle='#DEDEDE';
-    
     textCtx.wrapText("F:"+player.food,160,210,16);
-    
     diff = player.food - lastMove.food;
-    
     if(diff < 0){
-    
         textCtx.fillStyle='#EB1313';
         textCtx.wrapText(""+diff+"",160,230,16);
-
     }else if(diff > 0){
-    
         textCtx.fillStyle='#05ED14';
         textCtx.wrapText("+"+diff,160,230,16);
-    
     }
     
-    
-    
-    
     textCtx.fillStyle='#DEDEDE';
-    
     textCtx.wrapText("K:"+player.keys,260,210,16);
-    
     diff = player.keys - lastMove.keys;
-    
     if(diff < 0){
-    
         textCtx.fillStyle='#EB1313';
         textCtx.wrapText(""+diff+"",260,230,16);
-
     }else if(diff > 0){
-    
         textCtx.fillStyle='#05ED14';
         textCtx.wrapText("+"+diff,260,230,16);
-    
     }
-    
-    
     
     textCtx.fillStyle='#DEDEDE';
-    
     textCtx.wrapText("G:"+player.gold,350,210,16);
-    
     diff = player.gold - lastMove.gold;
-    
     if(diff < 0){
-    
         textCtx.fillStyle='#EB1313';
         textCtx.wrapText(""+diff+"",350,230,16);
-
     }else if(diff > 0){
-    
         textCtx.fillStyle='#05ED14';
         textCtx.wrapText("+"+diff,350,230,16);
-    
     }
-    
-    
-    
     
     if(player.health <= 0){
-    
         endGame();
-    
     }
-    
         
     lastMove.health = player.health;
     lastMove.food   = player.food;
     lastMove.keys   = player.keys;
     lastMove.gold   = player.gold;
-    
 }
 
 drawBG(false);
@@ -740,317 +494,188 @@ function clearText (){
 }
 
 function clearMap () {
-
     mapCtx.clearRect(mapStartLoc.x-2,mapStartLoc.y-2,152,152); 
-    
     currentRoomPos = ({x:2, y:2});
-    
     lastMapCurrentPixelLoc.x = mapStartLoc.x+(currentRoomPos.x*mapPixelMultiplier);
     lastMapCurrentPixelLoc.y = mapStartLoc.y+(currentRoomPos.y*mapPixelMultiplier);
-
 }
 
 function endGame(){
-
     if(player.food === 0 && player.health === 0){
-
         writeMessage("You died, most likely of starvation.","messageRed");
-    
         textCtx.fillText("YOU'RE DEAD", roomStartLoc.x+23, roomStartLoc.y+30);
-        
     }
     
     var finalScore = player.roomsVisited + player.gold;
-    
     writeMessage("Your final score is "+finalScore+". Press R to start a new game.","messageBlue");
-
-
 }
 
 function checkMoveWithPos(pos, dir){
-
     var roomProperties = rooms[pos.x][pos.y];
-    
     var movePlayer = false;
-    
     var usedKey = false;
-    
     if(dir === "hor"){
-    
         if(roomProperties.exitRight === "o"){
-        
             movePlayer = true;
-        
-        }
-        else if(roomProperties.exitRight === "l" && player.keys > 0){
-        
+        } else if(roomProperties.exitRight === "l" && player.keys > 0){
             player.keys -= 1;
-            
             usedKey = true;
-                
             roomProperties.exitRight = "o";
-        
             movePlayer = true;
-        
         }
-
     }else{
-    
         if(roomProperties.exitDown === "o"){
-        
             movePlayer = true;
-        
-        }
-        else if(roomProperties.exitDown === "l" && player.keys > 0){
-        
+        } else if(roomProperties.exitDown === "l" && player.keys > 0){
             player.keys -= 1;
-            
             usedKey = true;
-            
             roomProperties.exitDown = "o";
-        
             movePlayer = true;
-        
         }
-    
     }
     
     if(movePlayer){ 
-    
         if(usedKey && player.keys === 0){
-        
             writeMessage("Oh no! You used all your keys! Looks like there's no hope in seeing your family this Christmas.. unless you find some keys.","messageRed");
-        
         }
     
         // recover health when moving
         if(player.food > 0 && player.health < player.maxHealth){
-        
             player.health += 1;
-        
         }
     
         if(player.food > 0){ // lose food when moving
-        
             player.food -= 1;
-            
             if(player.food === 0){
-        
                 writeMessage("You ran out of food! You can feel yourself getting weaker with every step you take.","messageRed");
-        
             }
-        
         }else if(player.health > 0){ // player starving
-        
             player.health -= 1;
-        
         }
         
         if(player.food === 0 && player.health === 6){
-        
             writeMessage("You're wasting away to almost nothing from starving to death. Your body more or less resembles skin and bones. Find food fast.","messageRed");
-        
         } 
         
         if(player.health === 10){
-        
             writeMessage("You're running dangerously low on health!","messageRed");
-        
         }
         
         // check if beggar was in room, and if so add beggar to empty room and remove old beggar
         var currentRoomProperties = rooms[currentRoomPos.x][currentRoomPos.y];
-        
         var isBeggarObjEmpty = isEmpty(currentRoomProperties.beggar);
-        
         if(isBeggarObjEmpty === false){
-            
             // get random empty room index
             var emptyRoomIndex = Math.floor(Math.random()*emptyRoomList.length);
-        
             // room properties of random room       
             var newRoomProperties = rooms[emptyRoomList[emptyRoomIndex].x][emptyRoomList[emptyRoomIndex].y];
-            
             // apply random beggar properties to empty room
             makeRandomBeggarProperties(newRoomProperties.beggar);
-            
             // add current player location to empty room list
             emptyRoomList.push({x:currentRoomPos.x, y:currentRoomPos.x});
-            
             // replace beggar object in current room to a blank object
             currentRoomProperties.beggar = {};
-            
             // get rid of old empty room index because it's not empty anymore
             emptyRoomList.splice(emptyRoomIndex, 1);
-        
         }
-            
     }
-
     return movePlayer;
-
 }
 
 document.addEventListener('keydown', function(event) {
     var movePlayer;
     if(player.health > 0){ 
-
         if(event.keyCode === 65) { //left, a
-    
             if(currentRoomPos.x > 0){
-    
                 movePlayer = checkMoveWithPos({x:currentRoomPos.x-1, y:currentRoomPos.y}, "hor");
-                
                 if(movePlayer){
-                
                     currentRoomPos.x -= 1;
-                    
                     clearPlayfield();
                     drawBG(true);
-                    
                 }
             }
-            
-        }
-        else if(event.keyCode === 68) { //right, d
-    
+        } else if(event.keyCode === 68) { //right, d
             if(currentRoomPos.x < dungeonSize.width -1){
-    
                 movePlayer = checkMoveWithPos({x:currentRoomPos.x, y:currentRoomPos.y}, "hor");
-                
                 if(movePlayer){
-                
                     currentRoomPos.x += 1;
-                    
                     clearPlayfield();
                     drawBG(true);
-                    
                 }
-        
-            
             }
-            
         }
     
         if(event.keyCode === 87) { //up, w
-    
             if(currentRoomPos.y > 0){
-    
                 movePlayer = checkMoveWithPos({x:currentRoomPos.x, y:currentRoomPos.y-1},"ver");
-                
                 if(movePlayer){
-                
                     currentRoomPos.y -= 1;
-                    
                     clearPlayfield();
                     drawBG(true);
-                    
                 }
             }
-            
-        }
-        else if(event.keyCode === 83) { //down, s
-    
+        } else if(event.keyCode === 83) { //down, s
             if(currentRoomPos.y < dungeonSize.height -1){
-    
                 movePlayer = checkMoveWithPos({x:currentRoomPos.x, y:currentRoomPos.y},"ver");
-                
                 if(movePlayer){
-                
                     currentRoomPos.y += 1;
-                    
                     clearPlayfield();
                     drawBG(true);
-
-                    
                 }
             }
-            
-        }
-        else if(event.keyCode === 74) { // action, j
-        
+        } else if(event.keyCode === 74) { // action, j
             checkRoom();
-
             clearPlayfield();
             drawBG(false);
-            
         }
-            
     }else{
-    
         if(event.keyCode === 82) { // restart game, r
-        
             clearMap();
-            
             clearPlayfield();
-        
             initPlayer();
-            
             rooms = makeRooms(dungeonSize.width,dungeonSize.height);
-            
             drawBG(false);
-            
         }
-    
     }
-
 });
 
 function checkRoom () {
-
     var roomProperties = rooms[currentRoomPos.x][currentRoomPos.y];
-    
     var isChestObjEmpty = isEmpty(roomProperties.chest);
-    
     var isBeggarObjEmpty = isEmpty(roomProperties.beggar);
-    
+
     if(isChestObjEmpty === false && roomProperties.chest.opened === false && player.keys > 0){ 
-            
         roomProperties.chest.opened = true;
-        
         player.keys -= 1;
-        
         if(roomProperties.chest.keys === 0 && 
-        roomProperties.chest.gold === 0 && 
-        roomProperties.chest.food === 0 &&
-        roomProperties.chest.health === 0){
+            roomProperties.chest.gold === 0 && 
+            roomProperties.chest.food === 0 &&
+            roomProperties.chest.health === 0){
         
             writeMessage("You are horribly unlucky. There is nothing in this chest. Worse off, you wasted a key.","messageRed");
-            
         }else{
-        
-        
             var keysStr = "";
             var goldStr = "";
             var foodStr = "";
             var healthStr = "";
             
             if(roomProperties.chest.keys > 0){
-            
                 keysStr = "Keys:"+roomProperties.chest.keys+" ";
-                
             }
             
             if(roomProperties.chest.gold > 0){
-                
                 goldStr = "Gold:"+roomProperties.chest.gold+" ";
-                
             }
             
             if(roomProperties.chest.food > 0){
-                
                 foodStr = "Food:"+roomProperties.chest.food+" ";
-                
             }
             
             if(roomProperties.chest.health > 0){
-                
                 healthStr = "Health:"+roomProperties.chest.health+" ";
-                
             }
             
             writeMessage("You opened the chest. Let's see what you collected: "+keysStr+goldStr+foodStr+healthStr,"messageBlue");
-        
         }
         
         player.keys += roomProperties.chest.keys;
@@ -1058,108 +683,60 @@ function checkRoom () {
         player.food += roomProperties.chest.food;
         
         if(player.health + roomProperties.chest.health > player.maxHealth){
-        
             player.health = player.maxHealth;
-        
         }else{
-        
             player.health += roomProperties.chest.health;
-    
         }
     }else if(isBeggarObjEmpty === false){
-    
         if(roomProperties.beggar.wantsGold > 0){
-        
             if(player.gold >= roomProperties.beggar.wantsGold){
-            
                 player.gold -= roomProperties.beggar.wantsGold;
-                
                 player.food += roomProperties.beggar.forFood;
                 player.keys += roomProperties.beggar.forKeys;
                 
                 writeMessage("Oh, bless you!","messageGreen");
-            
             }else{
-            
                 writeMessage("Sorry, need more gold.","messageGreen");
-            
             }
-        
-        }
-        
-        else if(roomProperties.beggar.wantsFood > 0){
-        
+        } else if(roomProperties.beggar.wantsFood > 0){
             if(player.food >= roomProperties.beggar.wantsFood){
-            
                 player.food -= roomProperties.beggar.wantsFood;
-                
                 player.gold += roomProperties.beggar.forGold;
                 player.keys += roomProperties.beggar.forKeys;
                 
                 writeMessage("Oh, bless you!","messageGreen");
-            
             }else{
-            
                 writeMessage("Sorry, need more food.","messageGreen");
-            
             }
-        
-        }
-        
-        else if(roomProperties.beggar.wantsKeys > 0){
-        
+        } else if(roomProperties.beggar.wantsKeys > 0){
             if(player.keys >= roomProperties.beggar.wantsKeys){
-            
                 player.keys -= roomProperties.beggar.wantsKeys;
-                
                 player.gold += roomProperties.beggar.forGold;
                 player.food += roomProperties.beggar.forFood;
                 
                 writeMessage("Oh, bless you!","messageGreen");
-            
             }else{
-            
                 writeMessage("Sorry, need more keys.","messageGreen");
-            
             }
-        
         }
-    
     }else if (roomProperties.keys != null) {
-    
         player.keys += roomProperties.keys;
-                
         writeMessage("You picked up the shiny object. Let's see what you collected: Keys:"+roomProperties.keys,"messageBlue");
-        
         roomProperties.keys = null;
-        
         // add current player location to empty room list
         emptyRoomList.push({x:currentRoomPos.x, y:currentRoomPos.x});
-    
     }else if (roomProperties.food != null) {
-    
         player.food += roomProperties.food;
-            
         writeMessage("You picked up the can. Let's see what you collected: Food:"+roomProperties.food,"messageBlue");
-        
         roomProperties.food = null;
-        
         // add current player location to empty room list
         emptyRoomList.push({x:currentRoomPos.x, y:currentRoomPos.x});
-    
     }else if (roomProperties.gold != null) {
-    
         player.gold += roomProperties.gold;
-            
         writeMessage("You picked up the shiny object. Let's see what you collected: Gold:"+roomProperties.gold,"messageBlue");
-        
         roomProperties.gold = null;
-        
         // add current player location to empty room list
         emptyRoomList.push({x:currentRoomPos.x, y:currentRoomPos.x});
-    
     }
-    
-
 }
 })();
