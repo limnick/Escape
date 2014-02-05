@@ -583,60 +583,50 @@ function checkMoveWithPos(pos, dir){
 }
 
 document.addEventListener('keydown', function(event) {
-    var movePlayer;
-    if(player.health > 0){ 
-        if(event.keyCode === 65) { //left, a
-            if(currentRoomPos.x > 0){
-                movePlayer = checkMoveWithPos({x:currentRoomPos.x-1, y:currentRoomPos.y}, "hor");
-                if(movePlayer){
-                    currentRoomPos.x -= 1;
-                    clearPlayfield();
-                    drawBG(true);
-                }
-            }
-        } else if(event.keyCode === 68) { //right, d
-            if(currentRoomPos.x < dungeonSize.width -1){
-                movePlayer = checkMoveWithPos({x:currentRoomPos.x, y:currentRoomPos.y}, "hor");
-                if(movePlayer){
-                    currentRoomPos.x += 1;
-                    clearPlayfield();
-                    drawBG(true);
-                }
-            }
-        }
-    
-        if(event.keyCode === 87) { //up, w
-            if(currentRoomPos.y > 0){
-                movePlayer = checkMoveWithPos({x:currentRoomPos.x, y:currentRoomPos.y-1},"ver");
-                if(movePlayer){
-                    currentRoomPos.y -= 1;
-                    clearPlayfield();
-                    drawBG(true);
-                }
-            }
-        } else if(event.keyCode === 83) { //down, s
-            if(currentRoomPos.y < dungeonSize.height -1){
-                movePlayer = checkMoveWithPos({x:currentRoomPos.x, y:currentRoomPos.y},"ver");
-                if(movePlayer){
-                    currentRoomPos.y += 1;
-                    clearPlayfield();
-                    drawBG(true);
-                }
-            }
-        } else if(event.keyCode === 74) { // action, j
-            checkRoom();
-            clearPlayfield();
-            drawBG(false);
-        }
-    }else{
-        if(event.keyCode === 82) { // restart game, r
-            clearMap();
-            clearPlayfield();
-            initPlayer();
-            rooms = makeRooms(dungeonSize.width,dungeonSize.height);
-            drawBG(false);
-        }
+    var movePlayer = false,
+        delt_x = 0,
+        delt_y = 0,
+        draw_bg = false;
+
+    //-- handle restart
+    if(event.keyCode === 82) { // restart game, r
+        clearMap();
+        clearPlayfield();
+        initPlayer();
+        rooms = makeRooms(dungeonSize.width,dungeonSize.height);
+        drawBG(false);
     }
+
+    //-- block dead players from proceeding
+    if(player.health === 0) { return; }
+
+    //-- player movement
+    if(event.keyCode === 65 && currentRoomPos.x > 0) { //left, a
+        movePlayer = checkMoveWithPos({x:currentRoomPos.x-1, y:currentRoomPos.y}, "hor");
+        delt_x = -1;
+    } else if(event.keyCode === 68 && currentRoomPos.x < (dungeonSize.width - 1)) { //right, d
+        movePlayer = checkMoveWithPos({x:currentRoomPos.x, y:currentRoomPos.y}, "hor");
+        delt_x = 1;
+    } else if(event.keyCode === 87 && currentRoomPos.y > 0) { //up, w
+        movePlayer = checkMoveWithPos({x:currentRoomPos.x, y:currentRoomPos.y-1}, "ver");
+        delt_y = -1;
+    } else if(event.keyCode === 83 && currentRoomPos.y < (dungeonSize.height - 1)) { //down, s
+        movePlayer = checkMoveWithPos({x:currentRoomPos.x, y:currentRoomPos.y}, "ver");
+        delt_y = 1;
+    }
+
+    if(movePlayer){
+        currentRoomPos.y += delt_y;
+        currentRoomPos.x += delt_x;
+        draw_bg = true;
+    }
+
+    if(event.keyCode === 74) { // action, j
+        checkRoom();
+    }
+
+    clearPlayfield();
+    drawBG(draw_bg);
 });
 
 function checkRoom () {
